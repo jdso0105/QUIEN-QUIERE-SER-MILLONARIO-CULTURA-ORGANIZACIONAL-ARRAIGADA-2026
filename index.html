@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>¿Quién Quiere Ser Millonario?</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Cinzel:wght@700;900&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; padding: 0;
+      background: radial-gradient(circle at center, #1e0b4a 0%, #08021a 70%, #03000d 100%);
+      font-family: 'Montserrat', sans-serif;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .game-screen {
+      width: 100%;
+      max-width: 1100px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      position: relative;
+    }
+
+    /* PANTALLA INICIO Y FINAL */
+    #intro-screen, #result-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 85vh;
+      text-align: center;
+      gap: 20px;
+    }
+    #result-screen { display: none; }
+
+    .main-logo {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 6px solid #8b5cf6;
+      background: radial-gradient(circle, #3b0764 0%, #0f051d 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px #8b5cf6, inset 0 0 20px #a855f7;
+    }
+    .main-logo h2 { font-family: 'Cinzel', serif; font-size: 16px; color: #f59e0b; letter-spacing: 2px; }
+    .main-logo h1 { font-family: 'Cinzel', serif; font-size: 24px; color: #fff; text-shadow: 0 0 10px #fff; }
+    
+    .start-btn {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 100%);
+      border: 3px solid #fef3c7;
+      color: #fff;
+      padding: 14px 40px;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(217, 119, 6, 0.8);
+    }
+
+    /* PANTALLA JUEGO PRINCIPAL */
+    #game-screen {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 95vh;
+      gap: 12px;
+    }
+
+    /* TOP SECTION */
+    .top-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    /* COMODINES OVALADOS */
+    .lifelines-group {
+      display: flex;
+      gap: 10px;
+    }
+    .lifeline-oval {
+      width: 60px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1e1b4b 0%, #090526 100%);
+      border: 3px solid #a855f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+      cursor: pointer;
+    }
+    .lifeline-oval.used {
+      opacity: 0.3;
+      border-color: #475569;
+      color: #64748b;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+
+    /* LOGO CENTRO PEQUEÑO */
+    .center-mini-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid #8b5cf6;
+      background: radial-gradient(circle, #3b0764 0%, #0f051d 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px #8b5cf6;
+    }
+    .center-mini-logo span { font-family: 'Cinzel', serif; font-size: 9px; color: #f59e0b; }
+    .center-mini-logo strong { font-family: 'Cinzel', serif; font-size: 12px; color: #fff; }
+
+    /* PIRÁMIDE DERECHA CON DÓLARES */
+    .ladder-card {
+      width: 200px;
+      background: rgba(15, 5, 29, 0.85);
+      border: 3px solid #6d28d9;
+      border-radius: 10px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 2px;
+      box-shadow: 0 0 15px rgba(109, 40, 217, 0.4);
+    }
+    .ladder-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #d8b4fe;
+      border-radius: 4px;
+    }
+    .ladder-row.safe { color: #fff; font-weight: 800; }
+    .ladder-row.active {
+      background: linear-gradient(90deg, #d97706, #f59e0b);
+      color: #000;
+      font-weight: 900;
+      box-shadow: 0 0 10px #f59e0b;
+    }
+
+    /* HEXÁGONOS DE PREGUNTA Y RESPUESTAS */
+    .hex-box {
+      position: relative;
+      background: linear-gradient(180deg, #100826 0%, #050112 100%);
+      border: 3px solid #cbd5e1;
+      box-shadow: 0 0 15px rgba(203, 213, 225, 0.3), inset 0 0 10px #3b0764;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .question-hex {
+      width: 100%;
+      min-height: 85px;
+      border-radius: 40px / 20px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .options-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 650px) {
+      .options-container { grid-template-columns: 1fr; }
+      .top-section { flex-direction: column; align-items: center; gap: 10px; }
+      .ladder-card { width: 100%; }
+    }
+
+    .option-hex {
+      min-height: 52px;
+      border-radius: 30px / 15px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+    .opt-letter { color: #f59e0b; font-weight: 800; font-size: 15px; }
+
+    .option-hex.selected {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
+      border-color: #fef3c7 !important;
+      color: #fff !important;
+      box-shadow: 0 0 20px #f59e0b !important;
+    }
+    .option-hex.correct {
+      background: linear-gradient(180deg, #16a34a 0%, #15803d 100%) !important;
+      border-color: #bbf7d0 !important;
+      color: #fff !important;
+      box-shadow: 0 0 20px #22c55e !important;
+    }
+    .option-hex.incorrect {
+      background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%) !important;
+      border-color: #fca5a5 !important;
+    }
+    .option-hex.hidden-option { visibility: hidden; }
+
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      gap: 10px;
+    }
+    .ctrl-btn {
+      background: #3b0764;
+      border: 2px solid #8b5cf6;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* MODALES */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-body {
+      background: #1e0b4a;
+      border: 3px solid #8b5cf6;
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+    }
+
+    /* GRÁFICO AUDIENCIA */
+    .poll-chart {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 160px;
+      margin: 16px 0;
+      border-bottom: 2px solid #a855f7;
+      padding-bottom: 8px;
+    }
+    .poll-bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 20%;
+    }
+    .poll-bar-fill {
+      width: 100%;
+      background: linear-gradient(180deg, #f59e0b 0%, #b45309 100%);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.5s ease-in-out;
+    }
+    .poll-bar-val { font-size: 11px; font-weight: 800; color: #f59e0b; margin-bottom: 4px; }
+    .poll-bar-label { font-size: 13px; font-weight: 800; color: #fff; margin-top: 6px; }
+
+    /* TARJETA DE RESULTADOS */
+    .results-card {
+      background: rgba(30, 11, 74, 0.9);
+      border: 4px solid #f59e0b;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.6);
+      max-width: 450px;
+      width: 100%;
+    }
+    .results-score {
+      font-size: 44px;
+      font-weight: 900;
+      color: #22c55e;
+      text-shadow: 0 0 15px #22c55e;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-screen">
+    <!-- PANTALLA DE INICIO -->
+    <div id="intro-screen">
+      <div class="main-logo">
+        <h2>QUIÉN QUIERE SER</h2>
+        <h1>MILLONARIO</h1>
+      </div>
+      <p style="color: #c084fc; font-weight: 600;">Cultura Organizacional Arraigada</p>
+      <button class="start-btn" onclick="startGame()"><i class="fa-solid fa-play"></i> INICIAR JUEGO</button>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
+    <div id="game-screen">
+      <div class="top-section">
+        <!-- COMODINES IZQUIERDA -->
+        <div class="lifelines-group">
+          <div class="lifeline-oval" id="btn-5050" onclick="use5050()">50:50</div>
+          <div class="lifeline-oval" id="btn-phone" onclick="usePhone()"><i class="fa-solid fa-phone"></i></div>
+          <div class="lifeline-oval" id="btn-audience" onclick="useAudience()"><i class="fa-solid fa-users"></i></div>
+        </div>
+
+        <!-- LOGO CENTRO -->
+        <div class="center-mini-logo">
+          <span>QUIÉN QUIERE SER</span>
+          <strong>MILLONARIO</strong>
+        </div>
+
+        <!-- ESCALA DERECHA CON PREMIOS -->
+        <div class="ladder-card" id="ladder-box"></div>
+      </div>
+
+      <div>
+        <div class="hex-box question-hex" id="question-text">Cargando...</div>
+        <div class="options-container">
+          <div class="hex-box option-hex" id="opt-A" onclick="selectOption('A')"><span class="opt-letter">◆ A:</span> <span id="text-A"></span></div>
+          <div class="hex-box option-hex" id="opt-B" onclick="selectOption('B')"><span class="opt-letter">◆ B:</span> <span id="text-B"></span></div>
+          <div class="hex-box option-hex" id="opt-C" onclick="selectOption('C')"><span class="opt-letter">◆ C:</span> <span id="text-C"></span></div>
+          <div class="hex-box option-hex" id="opt-D" onclick="selectOption('D')"><span class="opt-letter">◆ D:</span> <span id="text-D"></span></div>
+        </div>
+      </div>
+
+      <!-- CONTROLES ABAJO -->
+      <div class="controls-bar">
+        <button class="ctrl-btn" style="background:#1e293b; border-color:#475569;" onclick="resetGame()">Reiniciar</button>
+        <div style="display:flex; gap:8px;">
+          <button class="ctrl-btn" style="background:#d97706; border-color:#fef3c7;" onclick="revealAnswer()">Revelar</button>
+          <button class="ctrl-btn" style="background:#6d28d9; border-color:#a855f7;" id="btn-next" onclick="nextQuestion()">Siguiente ◆</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANTALLA DE RESULTADOS FINALES -->
+    <div id="result-screen">
+      <div class="results-card">
+        <i class="fa-solid fa-sack-dollar" style="font-size: 50px; color: #f59e0b;"></i>
+        <h2 style="font-family: 'Cinzel', serif; color: #fff; margin-top: 10px;">¡PREMIO ACUMULADO!</h2>
+        <p style="color: #c084fc; font-size: 14px; margin-top: 4px;">Resumen del Concursante</p>
+        
+        <div class="results-score" id="score-money">$0</div>
+        <p style="color: #e2e8f0; font-size: 14px; font-weight: 600;" id="score-status">0 de 15 Preguntas Acertadas</p>
+        
+        <div style="margin-top: 16px; padding: 10px; background: rgba(0,0,0,0.4); border-radius: 8px;">
+          <span style="font-size: 12px; color: #94a3b8;">Nivel Alcanzado:</span>
+          <p style="font-size: 16px; font-weight: 800; color: #f59e0b;" id="final-level">Colaborador</p>
+        </div>
+
+        <button class="start-btn" style="margin-top: 20px; padding: 10px 28px; font-size: 15px;" onclick="resetGame()">Jugar de Nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LLAMADA -->
+  <div class="modal-overlay" id="phone-modal">
+    <div class="modal-body">
+      <h3 style="color:#f59e0b; margin-bottom:10px;">Llamada Telefónica</h3>
+      <p id="phone-text" style="font-size:13px; line-height:1.4; margin-bottom:16px;"></p>
+      <button class="ctrl-btn" style="background:#d97706;" onclick="closeModal('phone-modal')">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- MODAL PÚBLICO -->
+  <div class="modal-overlay" id="audience-modal">
+    <div class="modal-body">
+      <h3 style="color:#38bdf8; margin-bottom:6px;"><i class="fa-solid fa-users"></i> Votación del Público</h3>
+      <p style="font-size:12px; color:#cbd5e1;">Resultados de la consulta a la audiencia:</p>
+      
+      <div class="poll-chart">
+        <div class="poll-bar-col"><span class="poll-bar-val" id="val-A">0%</span><div class="poll-bar-fill" id="bar-A" style="height:0%;"></div><span class="poll-bar-label">A</span></div>
+        <div class="poll-bar-col"><span class="poll-bar-val" id="val-B">0%</span><div class="poll-bar-fill" id="bar-B" style="height:0%;"></div><span class="poll-bar-label">B</span></div>
+        <div class="poll-bar-col"><span class="poll-bar-val" id="val-C">0%</span><div class="poll-bar-fill" id="bar-C" style="height:0%;"></div><span class="poll-bar-label">C</span></div>
+        <div class="poll-bar-col"><span class="poll-bar-val" id="val-D">0%</span><div class="poll-bar-fill" id="bar-D" style="height:0%;"></div><span class="poll-bar-label">D</span></div>
+      </div>
+
+      <button class="ctrl-btn" style="background:#6d28d9;" onclick="closeModal('audience-modal')">Volver al Juego</button>
+    </div>
+  </div>
+
+  <script>
+    let audioCtx = null;
+    function playSound(type) {
+      try {
+        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+
+        if (type === 'select') {
+          osc.type = 'sine'; osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.start(now); osc.stop(now + 0.12);
+        } else if (type === 'correct') {
+          osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.1);
+          osc.frequency.setValueAtTime(783.99, now + 0.2);
+          gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now); osc.stop(now + 0.4);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+          gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now); osc.stop(now + 0.3);
+        }
+      } catch(e){}
+    }
+
+    const questions = [
+      { num: 1, title: "1. Colaborador", reward: 10, q: "¿Qué representa principalmente la cultura organizacional dentro de una empresa u organización?", options: { A: "El organigrama oficial y la jerarquía de puestos de trabajo.", B: "El conjunto de valores, creencias, normas y suposiciones compartidas que guían el comportamiento.", C: "El manual de procedimientos contables y financieros.", D: "La estrategia financiera a corto plazo de la compañía." }, correct: "B" },
+      { num: 2, title: "2. Equipo Base", reward: 30, q: "¿Cuál de los siguientes elementos se considera un artefacto visible de la cultura organizacional superficial?", options: { A: "Los supuestos tácitos sobre la naturaleza humana.", B: "Las creencias inconscientes sobre el éxito.", C: "La arquitectura de las oficinas, el código de vestimenta y los logotipos.", D: "Los valores declarados en la misión corporativa." }, correct: "C" },
+      { num: 3, title: "3. Liderazgo", reward: 50, q: "Cuando se describe una cultura organizacional como 'profundamente arraigada', ¿qué implica fundamentalmente?", options: { A: "Que las normas y comportamientos se han vuelto automáticos, incuestionables y extremadamente difíciles de cambiar.", B: "Que la empresa tiene alta rotación de personal y cambia de valores cada año.", C: "Que los empleados dependen exclusivamente de un manual impreso para trabajar.", D: "Que los objetivos de producción cambian trimestralmente según el mercado." }, correct: "A" },
+      { num: 4, title: "4. Gerencia", reward: 80, q: "Según el modelo de los niveles de la cultura organizacional de Edgar Schein, ¿qué nivel representa el núcleo más oculto y resistente al cambio?", options: { A: "Los artefactos y creaciones.", B: "Los valores espaciados o declarados.", C: "Las estrategias de marketing y publicidad.", D: "Los supuestos básicos subyacentes." }, correct: "D" },
+      { num: 5, title: "5. Directorio", reward: 100, q: "¿Cómo se transmiten de manera más efectiva las normas informales y no escritas a los nuevos integrantes en una cultura altamente arraigada?", options: { A: "Mediante exámenes teóricos escritos aplicados cada lunes.", B: "A través del modelado de conducta, historias contadas por veteranos y la presión de los grupos de pares.", C: "Con sanciones legales impuestas por los tribunales laborales externos.", D: "A través de memorandos emitidos de forma obligatoria por el departamento legal." }, correct: "B" },
+      { num: 6, title: "6. Vicepresidencia", reward: 150, q: "¿Qué fenómeno disruptivo experimenta comúnmente una empresa con cultura hiper-arraigada cuando la alta dirección intenta una reestructuración radical?", options: { A: "Una adopción inmediata y entusiasta por parte de todo el personal operativo.", B: "La desaparición espontánea de todos los conflictos internos en 48 horas.", C: "Una fuerte inercia y resistencia pasiva o activa ('aquí siempre se ha hecho así').", D: "Un incremento automático de la rentabilidad financiera a corto plazo." }, correct: "C" },
+      { num: 7, title: "7. Presidencia", reward: 200, q: "¿Cuál es la función principal de los mitos, rituales y leyendas corporativas dentro de una cultura profundamente establecida?", options: { A: "Reforzar y legitimar los valores centrales de la organización, sirviendo como ejemplo vivo de lo que se premia o castiga.", B: "Confundir a los clientes externos para que no conozcan los estados financieros.", C: "Reducir de manera directa el presupuesto de la empresa destinado a tecnologías.", D: "Cumplir con las exigencias impositivas de las agencias de recaudación fiscal." }, correct: "A" },
+      { num: 8, title: "8. Accionista", reward: 250, q: "En el contexto de fusiones y adquisiciones (M&A), ¿por qué suelen fracasar con frecuencia aquellas que involucran culturas corporativas fuertemente arraigadas y opuestas?", options: { A: "Porque las computadoras de ambas empresas utilizan sistemas operativos diferentes.", B: "Debido a que la tasa impositiva cambia automáticamente al unificar las marcas.", C: "Porque los logotipos nuevos tardan demasiado tiempo en imprimirse.", D: "Por el rechazo mutuo y el choque de los supuestos básicos, generando desconfianza y fuga de talento." }, correct: "D" },
+      { num: 9, title: "9. Consejo", reward: 300, q: "¿Qué define con mayor precisión el concepto de 'inercia cultural' en una organización con un arraigo profundo?", options: { A: "La capacidad de la empresa para innovar velozmente ante mercados cambiantes.", B: "La tendencia a mantener patrones de comportamiento tradicionales y obsoletos a pesar de que el entorno exige cambios.", C: "Un plan de incentivos salariales atado estrictamente a metas de ventas.", D: "La automatización total de la cadena de suministro mediante IA." }, correct: "B" },
+      { num: 10, title: "10. Socio Mayoritario", reward: 400, q: "¿Cómo influyen los supuestos tácitos (el nivel más profundo del modelo de Schein) en la toma de decisiones gerenciales cotidianas?", options: { A: "Obligando a los gerentes a consultar un flujograma legal antes de cada llamada.", B: "Dictando de forma explícita los porcentajes exactos de dividendos a repartir.", C: "Operando como un filtro invisible e inconsciente que determina qué problemas son importantes y qué soluciones son viables.", D: "Impidiendo totalmente que la empresa contrate personal con estudios avanzados." }, correct: "C" },
+      { num: 11, title: "11. Estratega Global", reward: 500, q: "¿Qué estrategia resulta generalmente más indispensable y efectiva para iniciar la transformación de una cultura profundamente arraigada pero disfuncional?", options: { A: "Crear una crisis real o percibida que queme los puentes del pasado, acompañada de un liderazgo coherente.", B: "Cambiar el color del logotipo corporativo y regalar tazas con nuevas palabras clave.", C: "Amenazar al personal con despidos masivos inmediatos mediante correos anónimos.", D: "Eliminar por completo los departamentos de recursos humanos y auditoría." }, correct: "A" },
+      { num: 12, title: "12. Líder Cultural", reward: 600, q: "¿Qué relación existe entre una cultura organizacional sumamente arraigada y la resistencia al aprendizaje organizacional adaptativo (de doble bucle)?", options: { A: "La estimula de forma inmediata, permitiendo cuestionar premisas fundamentales.", B: "Facilita el rediseño instantáneo de los procesos operativos sin fricción.", C: "No guarda ninguna relación, ya que ocurren en dimensiones separadas.", D: "La inhibe severamente, ya que exige cuestionar los supuestos de fondo que la cultura protege como dogmas." }, correct: "D" },
+      { num: 13, title: "13. Transformador de Cultura", reward: 700, q: "¿Cómo puede un nuevo líder transformar o fracturar con éxito una cultura arraigada que se ha vuelto tóxica o disfuncional?", options: { A: "Adoptando pasivamente las mismas costumbres y esperando que el mercado se adapte.", B: "Redefiniendo los sistemas de recompensa, removiendo a los guardianes del statu quo y modelando nuevas conductas.", C: "Contratando consultores externos para escribir un código de ética sin involucrarse.", D: "Cambiando la ubicación geográfica de la sede central a otra ciudad." }, correct: "B" },
+      { num: 14, title: "14. Gran Visionario", reward: 800, q: "¿Por qué los intentos superficiales de cambio cultural (como cambiar los valores escritos en la pared) suelen fracasar estrepitosamente?", options: { A: "Porque la pintura utilizada para escribir los valores no es de alta durabilidad.", B: "Porque confunden la cultura con la propaganda, ignorando que vive en los ritos informales y expectativas no escritas.", C: "Debido a que la tipografía elegida no es atractiva para las nuevas generaciones.", D: "Porque los sindicatos exigen por ley un tamaño específico de letrero." }, correct: "B" },
+      { num: 15, title: "15. Millonario de la Cultura", reward: 1000, q: "En una organización con cultura hiper-arraigada, ¿cuál es el riesgo estratégico principal del fenómeno de la 'ilusión de consenso absoluto'?", options: { A: "La ceguera ante señales de advertencia del mercado y la supresión de la disidencia, lo que conduce a la obsolescencia.", B: "Un incremento excesivo en la creatividad e innovación disruptiva en todos los departamentos.", C: "Una competencia feroz y desmedida entre los propios compañeros de equipo.", D: "El colapso inmediato de la infraestructura de redes informáticas." }, correct: "A" }
+    ];
+
+    let currentIdx = 0;
+    let selectedOpt = null;
+    let correctAnswersCount = 0;
+    let currentMoneyEarned = 0;
+    let hasAnsweredCurrent = false;
+
+    function startGame() {
+      document.getElementById('intro-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'flex';
+      renderLadder();
+      loadQuestion();
+    }
+
+    function renderLadder() {
+      const box = document.getElementById('ladder-box');
+      box.innerHTML = '';
+      questions.forEach((q, idx) => {
+        const row = document.createElement('div');
+        row.className = 'ladder-row';
+        if (idx === 4 || idx === 9 || idx === 14) row.classList.add('safe');
+        if (idx === currentIdx) row.classList.add('active');
+        row.innerHTML = `<span>${q.num}. $${q.reward}</span> <span>${q.title.split('. ')[1]}</span>`;
+        box.appendChild(row);
+      });
+    }
+
+    function loadQuestion() {
+      const q = questions[currentIdx];
+      document.getElementById('question-text').innerText = q.q;
+      ['A', 'B', 'C', 'D'].forEach(opt => {
+        const btn = document.getElementById(`opt-${opt}`);
+        document.getElementById(`text-${opt}`).innerText = q.options[opt];
+        btn.className = 'hex-box option-hex';
+      });
+      selectedOpt = null;
+      hasAnsweredCurrent = false;
+      document.getElementById('btn-next').innerText = (currentIdx === questions.length - 1) ? "Finalizar ◆" : "Siguiente ◆";
+      renderLadder();
+    }
+
+    function selectOption(opt) {
+      playSound('select');
+      ['A', 'B', 'C', 'D'].forEach(o => document.getElementById(`opt-${o}`).classList.remove('selected'));
+      document.getElementById(`opt-${opt}`).classList.add('selected');
+      selectedOpt = opt;
+    }
+
+    function revealAnswer() {
+      if (!selectedOpt || hasAnsweredCurrent) return;
+      hasAnsweredCurrent = true;
+      const q = questions[currentIdx];
+      
+      if (selectedOpt === q.correct) {
+        playSound('correct');
+        document.getElementById(`opt-${selectedOpt}`).classList.remove('selected');
+        document.getElementById(`opt-${selectedOpt}`).classList.add('correct');
+        correctAnswersCount++;
+        currentMoneyEarned = q.reward;
+      } else {
+        playSound('wrong');
+        document.getElementById(`opt-${selectedOpt}`).classList.remove('selected');
+        document.getElementById(`opt-${selectedOpt}`).classList.add('incorrect');
+        document.getElementById(`opt-${q.correct}`).classList.add('correct');
+      }
+    }
+
+    function nextQuestion() {
+      if (currentIdx < questions.length - 1) {
+        currentIdx++;
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('game-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'flex';
+      
+      document.getElementById('score-money').innerText = `$${currentMoneyEarned.toLocaleString()}`;
+      document.getElementById('score-status').innerText = `${correctAnswersCount} de 15 Preguntas Acertadas`;
+      
+      let levelTitle = "Colaborador Inicial";
+      if (correctAnswersCount >= 15) levelTitle = "Millonario de la Cultura Organizacional";
+      else if (correctAnswersCount >= 12) levelTitle = "Estratega & Líder Cultural";
+      else if (correctAnswersCount >= 9) levelTitle = "Consejero Gerencial";
+      else if (correctAnswersCount >= 5) levelTitle = "Líder de Equipo";
+      
+      document.getElementById('final-level').innerText = levelTitle;
+    }
+
+    function resetGame() {
+      currentIdx = 0;
+      correctAnswersCount = 0;
+      currentMoneyEarned = 0;
+      selectedOpt = null;
+      hasAnsweredCurrent = false;
+      
+      document.getElementById('btn-5050').classList.remove('used');
+      document.getElementById('btn-phone').classList.remove('used');
+      document.getElementById('btn-audience').classList.remove('used');
+      
+      startGame();
+    }
+
+    function use5050() {
+      const btn = document.getElementById('btn-5050');
+      if (btn.classList.contains('used')) return;
+      btn.classList.add('used');
+
+      const q = questions[currentIdx];
+      const wrong = ['A', 'B', 'C', 'D'].filter(o => o !== q.correct).sort(() => Math.random() - 0.5);
+      document.getElementById(`opt-${wrong[0]}`).classList.add('hidden-option');
+      document.getElementById(`opt-${wrong[1]}`).classList.add('hidden-option');
+    }
+
+    function usePhone() {
+      const btn = document.getElementById('btn-phone');
+      if (btn.classList.contains('used')) return;
+      btn.classList.add('used');
+
+      const q = questions[currentIdx];
+      document.getElementById('phone-text').innerText = `"Hola, como experto en desarrollo organizacional, estoy seguro de que la respuesta correcta es la opción ${q.correct}."`;
+      document.getElementById('phone-modal').style.display = 'flex';
+    }
+
+    function useAudience() {
+      const btn = document.getElementById('btn-audience');
+      if (btn.classList.contains('used')) return;
+      btn.classList.add('used');
+
+      const q = questions[currentIdx];
+      const correct = q.correct;
+      
+      let correctPct = Math.floor(Math.random() * 21) + 55;
+      let remaining = 100 - correctPct;
+      
+      let r1 = Math.floor(Math.random() * (remaining - 10));
+      let r2 = Math.floor(Math.random() * (remaining - r1));
+      let r3 = remaining - r1 - r2;
+
+      const opts = ['A', 'B', 'C', 'D'].filter(o => o !== correct);
+      let map = {};
+      map[correct] = correctPct;
+      map[opts[0]] = r1;
+      map[opts[1]] = r2;
+      map[opts[2]] = r3;
+
+      ['A', 'B', 'C', 'D'].forEach(o => {
+        let pct = map[o];
+        document.getElementById(`val-${o}`).innerText = pct + '%';
+        document.getElementById(`bar-${o}`).style.height = pct + '%';
+      });
+
+      document.getElementById('audience-modal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+  </script>
+</body>
+</html>
