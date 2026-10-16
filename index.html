@@ -406,31 +406,93 @@
 
   <script>
     let audioCtx = null;
-    function playSound(type) {
+    let bgOsc1 = null, bgOsc2 = null, bgGain = null;
+    let isBgMusicPlaying = false;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    /* MÚSICA DE SUSPENSO DE FONDO EN BUCLE */
+    function startBackgroundMusic() {
+      initAudioContext();
+      if (isBgMusicPlaying) return;
       try {
-        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-        if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        bgGain = audioCtx.createGain();
+        bgGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        bgOsc1 = audioCtx.createOscillator();
+        bgOsc2 = audioCtx.createOscillator();
+
+        bgOsc1.type = 'sawtooth';
+        bgOsc2.type = 'sine';
+
+        // Tonos de tensión en baja frecuencia (dramatismo)
+        bgOsc1.frequency.setValueAtTime(65.41, audioCtx.currentTime); // C2
+        bgOsc2.frequency.setValueAtTime(69.30, audioCtx.currentTime); // C#2 (intervalo disonante de tensión)
+
+        bgOsc1.connect(bgGain);
+        bgOsc2.connect(bgGain);
+        bgGain.connect(audioCtx.destination);
+
+        bgOsc1.start();
+        bgOsc2.start();
+        isBgMusicPlaying = true;
+      } catch(e) {}
+    }
+
+    function stopBackgroundMusic() {
+      if (!isBgMusicPlaying) return;
+      try {
+        if (bgGain) {
+          bgGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        }
+        setTimeout(() => {
+          if (bgOsc1) bgOsc1.stop();
+          if (bgOsc2) bgOsc2.stop();
+          isBgMusicPlaying = false;
+        }, 300);
+      } catch(e) {}
+    }
+
+    function playSoundEffect(type) {
+      initAudioContext();
+      try {
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
 
         if (type === 'select') {
-          osc.type = 'sine'; osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
-          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-          osc.start(now); osc.stop(now + 0.12);
+          osc.type = 'sine'; osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(600, now + 0.2);
+          gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now); osc.stop(now + 0.2);
         } else if (type === 'correct') {
-          osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(659.25, now + 0.1);
-          osc.frequency.setValueAtTime(783.99, now + 0.2);
-          gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-          osc.start(now); osc.stop(now + 0.4);
+          // Fanfarria triunfal de acierto
+          stopBackgroundMusic();
+          osc.type = 'triangle'; 
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.12);
+          osc.frequency.setValueAtTime(783.99, now + 0.24);
+          osc.frequency.setValueAtTime(1046.50, now + 0.36);
+          gain.gain.setValueAtTime(0.3, now); 
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now); osc.stop(now + 0.6);
         } else if (type === 'wrong') {
-          osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, now);
-          osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
-          gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-          osc.start(now); osc.stop(now + 0.3);
+          // Acorde de error
+          stopBackgroundMusic();
+          osc.type = 'sawtooth'; 
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.4);
+          gain.gain.setValueAtTime(0.3, now); 
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now); osc.stop(now + 0.4);
         }
       } catch(e){}
     }
@@ -440,7 +502,7 @@
       { num: 2, title: "2. Equipo Base", reward: 30, q: "¿Cuál de los siguientes elementos se considera un artefacto visible de la cultura organizacional superficial?", options: { A: "Los supuestos tácitos sobre la naturaleza humana.", B: "Las creencias inconscientes sobre el éxito.", C: "La arquitectura de las oficinas, el código de vestimenta y los logotipos.", D: "Los valores declarados en la misión corporativa." }, correct: "C" },
       { num: 3, title: "3. Liderazgo", reward: 50, q: "Cuando se describe una cultura organizacional como 'profundamente arraigada', ¿qué implica fundamentalmente?", options: { A: "Que las normas y comportamientos se han vuelto automáticos, incuestionables y extremadamente difíciles de cambiar.", B: "Que la empresa tiene alta rotación de personal y cambia de valores cada año.", C: "Que los empleados dependen exclusivamente de un manual impreso para trabajar.", D: "Que los objetivos de producción cambian trimestralmente según el mercado." }, correct: "A" },
       { num: 4, title: "4. Gerencia", reward: 80, q: "Según el modelo de los niveles de la cultura organizacional de Edgar Schein, ¿qué nivel representa el núcleo más oculto y resistente al cambio?", options: { A: "Los artefactos y creaciones.", B: "Los valores espaciados o declarados.", C: "Las estrategias de marketing y publicidad.", D: "Los supuestos básicos subyacentes." }, correct: "D" },
-      { num: 5, title: "5. Directorio", reward: 100, q: "¿Cómo se transmiten de manera más efectiva las normas informales y no escritas a los nuevos integrantes en una cultura altamente arraigada?", options: { A: "Mediante exámenes teóricos escritos aplicados cada lunes.", B: "A través del modelado de conducta, historias contadas por veteranos y la presión de los grupos de pares.", C: "Con sanciones legales impuestas por los tribunales laborales externos.", D: "A través de memorandos emitidos de forma obligatoria por el departamento legal." }, correct: "B" },
+      { num: 5, title: "5. Directorio", reward: 100, q: "¿Cómo se transmiten de manera más efectiva las normas informales y no escritas a los nuevos integrantes en una cultura highly arraigada?", options: { A: "Mediante exámenes teóricos escritos aplicados cada lunes.", B: "A través del modelado de conducta, historias contadas por veteranos y la presión de los grupos de pares.", C: "Con sanciones legales impuestas por los tribunales laborales externos.", D: "A través de memorandos emitidos de forma obligatoria por el departamento legal." }, correct: "B" },
       { num: 6, title: "6. Vicepresidencia", reward: 150, q: "¿Qué fenómeno disruptivo experimenta comúnmente una empresa con cultura hiper-arraigada cuando la alta dirección intenta una reestructuración radical?", options: { A: "Una adopción inmediata y entusiasta por parte de todo el personal operativo.", B: "La desaparición espontánea de todos los conflictos internos en 48 horas.", C: "Una fuerte inercia y resistencia pasiva o activa ('aquí siempre se ha hecho así').", D: "Un incremento automático de la rentabilidad financiera a corto plazo." }, correct: "C" },
       { num: 7, title: "7. Presidencia", reward: 200, q: "¿Cuál es la función principal de los mitos, rituales y leyendas corporativas dentro de una cultura profundamente establecida?", options: { A: "Reforzar y legitimar los valores centrales de la organización, sirviendo como ejemplo vivo de lo que se premia o castiga.", B: "Confundir a los clientes externos para que no conozcan los estados financieros.", C: "Reducir de manera directa el presupuesto de la empresa destinado a tecnologías.", D: "Cumplir con las exigencias impositivas de las agencias de recaudación fiscal." }, correct: "A" },
       { num: 8, title: "8. Accionista", reward: 250, q: "En el contexto de fusiones y adquisiciones (M&A), ¿por qué suelen fracasar con frecuencia aquellas que involucran culturas corporativas fuertemente arraigadas y opuestas?", options: { A: "Porque las computadoras de ambas empresas utilizan sistemas operativos diferentes.", B: "Debido a que la tasa impositiva cambia automáticamente al unificar las marcas.", C: "Porque los logotipos nuevos tardan demasiado tiempo en imprimirse.", D: "Por el rechazo mutuo y el choque de los supuestos básicos, generando desconfianza y fuga de talento." }, correct: "D" },
@@ -481,6 +543,7 @@
     }
 
     function loadQuestion() {
+      startBackgroundMusic();
       const q = questions[currentIdx];
       document.getElementById('question-text').innerText = q.q;
       ['A', 'B', 'C', 'D'].forEach(opt => {
@@ -495,7 +558,7 @@
     }
 
     function selectOption(opt) {
-      playSound('select');
+      playSoundEffect('select');
       ['A', 'B', 'C', 'D'].forEach(o => document.getElementById(`opt-${o}`).classList.remove('selected'));
       document.getElementById(`opt-${opt}`).classList.add('selected');
       selectedOpt = opt;
@@ -507,13 +570,13 @@
       const q = questions[currentIdx];
       
       if (selectedOpt === q.correct) {
-        playSound('correct');
+        playSoundEffect('correct');
         document.getElementById(`opt-${selectedOpt}`).classList.remove('selected');
         document.getElementById(`opt-${selectedOpt}`).classList.add('correct');
         correctAnswersCount++;
         currentMoneyEarned = q.reward;
       } else {
-        playSound('wrong');
+        playSoundEffect('wrong');
         document.getElementById(`opt-${selectedOpt}`).classList.remove('selected');
         document.getElementById(`opt-${selectedOpt}`).classList.add('incorrect');
         document.getElementById(`opt-${q.correct}`).classList.add('correct');
@@ -530,6 +593,7 @@
     }
 
     function showResults() {
+      stopBackgroundMusic();
       document.getElementById('game-screen').style.display = 'none';
       document.getElementById('result-screen').style.display = 'flex';
       
@@ -546,6 +610,7 @@
     }
 
     function resetGame() {
+      stopBackgroundMusic();
       currentIdx = 0;
       correctAnswersCount = 0;
       currentMoneyEarned = 0;
